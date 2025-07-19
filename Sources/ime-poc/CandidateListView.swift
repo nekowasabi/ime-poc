@@ -24,8 +24,16 @@ class CandidateListView: NSView {
     
     private func setupViews() {
         wantsLayer = true
-        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
-        layer?.cornerRadius = 8
+        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        layer?.cornerRadius = 6
+        layer?.borderWidth = 1
+        layer?.borderColor = NSColor.tertiaryLabelColor.cgColor
+        
+        // 影を追加してATOK風に
+        layer?.shadowColor = NSColor.black.cgColor
+        layer?.shadowOpacity = 0.2
+        layer?.shadowRadius = 4
+        layer?.shadowOffset = CGSize(width: 0, height: -2)
         
         scrollView = NSScrollView(frame: bounds)
         scrollView.autoresizingMask = [.width, .height]
@@ -42,6 +50,8 @@ class CandidateListView: NSView {
         tableView.intercellSpacing = NSSize(width: 0, height: 2)
         tableView.backgroundColor = .clear
         tableView.selectionHighlightStyle = .regular
+        tableView.gridStyleMask = []
+        tableView.usesAlternatingRowBackgroundColors = false
         
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("CandidateColumn"))
         column.width = bounds.width
@@ -78,15 +88,17 @@ class CandidateListView: NSView {
     
     func updateCandidates(_ newCandidates: [String]) {
         candidates = newCandidates
+        print("候補を更新: \(candidates)")
         tableView.reloadData()
         
         if !candidates.isEmpty {
             tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+            tableView.scrollRowToVisible(0)
         }
     }
     
     func calculateWindowSize() -> NSSize {
-        let height = min(CGFloat(candidates.count) * (rowHeight + 2) + padding * 2, 200)
+        let height = max(min(CGFloat(candidates.count) * (rowHeight + 2) + padding * 2, 200), 50)
         return NSSize(width: 250, height: height)
     }
     
@@ -124,19 +136,31 @@ extension CandidateListView: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let cellIdentifier = NSUserInterfaceItemIdentifier("CandidateCell")
         
-        let cell: NSTextField
-        if let recycledCell = tableView.makeView(withIdentifier: cellIdentifier, owner: nil) as? NSTextField {
-            cell = recycledCell
-        } else {
-            cell = NSTextField()
-            cell.identifier = cellIdentifier
-            cell.isBordered = false
-            cell.isEditable = false
-            cell.backgroundColor = .clear
-        }
+        let containerView = NSView()
+        containerView.wantsLayer = true
         
+        let cell = NSTextField()
+        cell.identifier = cellIdentifier
+        cell.isBordered = false
+        cell.isEditable = false
+        cell.drawsBackground = false
+        cell.backgroundColor = .clear
+        cell.textColor = .controlTextColor
+        cell.font = NSFont.systemFont(ofSize: 14)
+        cell.alignment = .left
         cell.stringValue = candidates[row]
-        return cell
+        
+        // セルの位置とサイズを設定
+        cell.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(cell)
+        
+        NSLayoutConstraint.activate([
+            cell.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+            cell.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            cell.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
+        ])
+        
+        return containerView
     }
     
     func tableViewSelectionDidChange(_ notification: Notification) {
