@@ -1,15 +1,18 @@
 import Cocoa
 
-@main
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var overlayWindowController: OverlayWindowController?
     private var inputMonitor: InputMonitor?
     private var statusItem: NSStatusItem?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        print("アプリケーション起動開始")
         setupStatusBarItem()
+        print("ステータスバーアイテム設定完了")
         setupAccessibilityPermissions()
+        print("アクセシビリティ権限確認完了")
         startInputMonitoring()
+        print("入力モニタリング開始完了")
     }
     
     func applicationWillTerminate(_ notification: Notification) {
@@ -62,5 +65,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         inputMonitor = InputMonitor()
         inputMonitor?.delegate = overlayWindowController
         inputMonitor?.start()
+        
     }
 }
